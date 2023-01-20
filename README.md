@@ -1,5 +1,5 @@
 - 👋 Hi, I’m @martekbarek
-- 👀 I’m interested in security, web technologies, devOps stuff and pentesting
+- 👀 I’m interested in Security, Web Technologies, DevOps and Pentesting
 - 🌱 I’m currently learning to pass AWS beginner exam
 - 📫 Reach me on LinkedIn: https://www.linkedin.com/in/bartosz-marek-8a4b4a1bb
 
