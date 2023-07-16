@@ -1,6 +1,6 @@
 - 👋 Hi, I’m @martekbarek
 - 👀 I’m interested in Security, Web Technologies and DevOps
-- 🌱 I’m currently learning to pass Splunk PowerUser
+- 🌱 I’m currently learning to pass Azure certification
 - 📫 Reach me on LinkedIn: https://www.linkedin.com/in/bartosz-marek-8a4b4a1bb
 
 <!---
