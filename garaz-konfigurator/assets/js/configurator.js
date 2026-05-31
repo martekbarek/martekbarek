@@ -161,16 +161,16 @@
     let html = '';
 
     /* ---- GROUND SHADOW ---- */
-    const shadow = [A, B, C, D].map(p => ({ x: p.x, y: p.y + 4 }));
-    html += `<ellipse cx="${ox.toFixed(1)}" cy="${(oy + 5).toFixed(1)}"
-      rx="${(W * COS30 * scale * 0.8).toFixed(1)}"
-      ry="${((W + L) * SIN30 * scale * 0.18).toFixed(1)}"
-      fill="rgba(0,0,0,0.12)" />`;
+    const shadowCx = ox + (W - L) * COS30 * scale * 0.35;
+    html += `<ellipse cx="${shadowCx.toFixed(1)}" cy="${(oy + 6).toFixed(1)}"
+      rx="${((W + L) * COS30 * scale * 0.52).toFixed(1)}"
+      ry="${((W + L) * SIN30 * scale * 0.20).toFixed(1)}"
+      fill="rgba(0,0,0,0.10)" />`;
 
-    /* ---- RIGHT SIDE WALL (drawn first — behind) ---- */
-    html += `<polygon points="${pts([B, C, C1, B1])}"
+    /* ---- LEFT SIDE WALL (drawn first — behind front face) ---- */
+    html += `<polygon points="${pts([A, D, D1, A1])}"
       fill="${wcd}" stroke="#222" stroke-width="1.2"/>`;
-    html += `<polygon points="${pts([B, C, C1, B1])}"
+    html += `<polygon points="${pts([A, D, D1, A1])}"
       fill="url(#gk-grad-side)" stroke="none"/>`;
 
     /* ---- FRONT WALL ---- */
@@ -259,40 +259,40 @@
       });
     }
 
-    /* ---- SIDE DOOR (right wall) ---- */
+    /* ---- SIDE DOOR (left wall — visible) ---- */
     if (state.sideDoor) {
       const dw  = 0.9;
       const dh  = H * 0.78;
       const dz0 = L * 0.25;
-      const SA  = ip(W, dz0, 0);
-      const SB  = ip(W, dz0 + dw, 0);
-      const SA1 = ip(W, dz0, dh);
-      const SB1 = ip(W, dz0 + dw, dh);
+      const SA  = ip(0, dz0, 0);
+      const SB  = ip(0, dz0 + dw, 0);
+      const SA1 = ip(0, dz0, dh);
+      const SB1 = ip(0, dz0 + dw, dh);
       html += `<polygon points="${pts([SA, SB, SB1, SA1])}"
         fill="${gFill}" stroke="#333" stroke-width="0.9"/>`;
-      const SM = ip(W, dz0 + dw / 2, 0);
-      const SM1 = ip(W, dz0 + dw / 2, dh);
+      const SM  = ip(0, dz0 + dw / 2, 0);
+      const SM1 = ip(0, dz0 + dw / 2, dh);
       html += `<line x1="${SM.x.toFixed(1)}" y1="${SM.y.toFixed(1)}"
         x2="${SM1.x.toFixed(1)}" y2="${SM1.y.toFixed(1)}"
         stroke="#555" stroke-width="0.7"/>`;
     }
 
-    /* ---- VENTILATION (right wall near top) ---- */
+    /* ---- VENTILATION (left wall near top — visible) ---- */
     if (state.ventilation) {
       const vw  = 0.5;
       const vh  = 0.25;
       const vz0 = L * 0.65;
       const vy  = H * 0.75;
-      const VA  = ip(W, vz0,      vy);
-      const VB  = ip(W, vz0 + vw, vy);
-      const VA1 = ip(W, vz0,      vy + vh);
-      const VB1 = ip(W, vz0 + vw, vy + vh);
+      const VA  = ip(0, vz0,      vy);
+      const VB  = ip(0, vz0 + vw, vy);
+      const VA1 = ip(0, vz0,      vy + vh);
+      const VB1 = ip(0, vz0 + vw, vy + vh);
       html += `<polygon points="${pts([VA, VB, VB1, VA1])}"
         fill="#888" stroke="#555" stroke-width="0.7"/>`;
       for (let i = 1; i < 4; i++) {
         const vy2 = vy + vh * i / 4;
-        const La = ip(W, vz0, vy2);
-        const Lb = ip(W, vz0 + vw, vy2);
+        const La = ip(0, vz0, vy2);
+        const Lb = ip(0, vz0 + vw, vy2);
         html += `<line x1="${La.x.toFixed(1)}" y1="${La.y.toFixed(1)}"
           x2="${Lb.x.toFixed(1)}" y2="${Lb.y.toFixed(1)}"
           stroke="#aaa" stroke-width="0.5"/>`;
@@ -318,14 +318,14 @@
       html += `<polygon points="${pts([R_FL, R_FR, R_BR, R_BL])}"
         fill="url(#gk-grad-roof-l)" stroke="none"/>`;
 
-      /* Gutters along eave */
+      /* Gutters: front eave + left eave (both visible in this view) */
       if (state.gutters) {
-        html += `<line x1="${R_BL.x.toFixed(1)}" y1="${(R_BL.y + 2).toFixed(1)}"
-          x2="${R_BR.x.toFixed(1)}" y2="${(R_BR.y + 2).toFixed(1)}"
-          stroke="#555" stroke-width="3" stroke-linecap="round"/>`;
         html += `<line x1="${R_FL.x.toFixed(1)}" y1="${(R_FL.y + 2).toFixed(1)}"
           x2="${R_FR.x.toFixed(1)}" y2="${(R_FR.y + 2).toFixed(1)}"
-          stroke="#555" stroke-width="2" stroke-linecap="round" opacity="0.5"/>`;
+          stroke="#555" stroke-width="3" stroke-linecap="round"/>`;
+        html += `<line x1="${R_FL.x.toFixed(1)}" y1="${(R_FL.y + 2).toFixed(1)}"
+          x2="${R_BL.x.toFixed(1)}" y2="${(R_BL.y + 2).toFixed(1)}"
+          stroke="#555" stroke-width="3" stroke-linecap="round"/>`;
       }
 
     } else {
@@ -391,16 +391,16 @@
       font-family="sans-serif" font-size="${lblFontSize}" fill="${lblColor}"
       text-anchor="middle" font-weight="600">${state.width} m</text>`;
 
-    /* Depth label (right bottom edge) */
-    const dimLA = ip(W, 0, 0);
-    const dimLB = ip(W, L, 0);
-    const dimLM = { x: (dimLA.x + dimLB.x) / 2 + 24, y: (dimLA.y + dimLB.y) / 2 };
-    html += `<line x1="${(dimLA.x+10).toFixed(1)}" y1="${dimLA.y.toFixed(1)}"
-      x2="${(dimLB.x+10).toFixed(1)}" y2="${dimLB.y.toFixed(1)}"
+    /* Depth label (left bottom edge — visible side) */
+    const dimLA = ip(0, 0, 0);
+    const dimLB = ip(0, L, 0);
+    const dimLM = { x: (dimLA.x + dimLB.x) / 2 - 20, y: (dimLA.y + dimLB.y) / 2 };
+    html += `<line x1="${(dimLA.x-10).toFixed(1)}" y1="${dimLA.y.toFixed(1)}"
+      x2="${(dimLB.x-10).toFixed(1)}" y2="${dimLB.y.toFixed(1)}"
       stroke="${lblColor}" stroke-width="1"/>`;
     html += `<text x="${(dimLM.x).toFixed(1)}" y="${dimLM.y.toFixed(1)}"
       font-family="sans-serif" font-size="${lblFontSize}" fill="${lblColor}"
-      text-anchor="start" dominant-baseline="middle" font-weight="600">${state.length} m</text>`;
+      text-anchor="end" dominant-baseline="middle" font-weight="600">${state.length} m</text>`;
 
     /* Height label (front-left vertical) */
     const dimHA  = ip(0, 0, 0);
