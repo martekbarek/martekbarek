@@ -2,13 +2,34 @@
 
 <div id="garaz-konfigurator" class="gk" role="main" aria-label="Konfigurator garażu blaszanego">
 
+  <!-- ===== HEADER ===== -->
+  <header class="gk__header">
+    <p class="gk__header-label">Konfigurator online</p>
+    <h2>Konfiguruj swój garaż blaszany</h2>
+    <p>Wybierz wymiary, kolor i wyposażenie — orientacyjna wycena pojawia się natychmiast</p>
+  </header>
+
+  <!-- ===== KROKI ===== -->
+  <nav class="gk__steps" aria-label="Etapy formularza">
+    <div class="gk__step gk__step--active" id="gk-step-1">
+      <span class="gk__step-num">1</span>
+      <span class="gk__step-label">Konfiguracja</span>
+    </div>
+    <div class="gk__step-sep" aria-hidden="true"></div>
+    <div class="gk__step" id="gk-step-2">
+      <span class="gk__step-num">2</span>
+      <span class="gk__step-label">Twoje dane</span>
+    </div>
+  </nav>
+
+  <!-- ===== KROK 1: KONFIGURACJA ===== -->
   <div class="gk__layout">
 
-    <!-- ===== PANEL STEROWANIA ===== -->
+    <!-- PANEL STEROWANIA -->
     <aside class="gk__controls" aria-label="Opcje konfiguracji">
 
       <details class="gk__section" open>
-        <summary class="gk__section-title">📐 Wymiary</summary>
+        <summary class="gk__section-title">Wymiary</summary>
         <div class="gk__section-body">
 
           <div class="gk__field">
@@ -54,7 +75,7 @@
       </details>
 
       <details class="gk__section" open>
-        <summary class="gk__section-title">🏠 Dach</summary>
+        <summary class="gk__section-title">Dach</summary>
         <div class="gk__section-body">
 
           <div class="gk__radio-group">
@@ -80,7 +101,7 @@
       </details>
 
       <details class="gk__section" open>
-        <summary class="gk__section-title">🚪 Wrota</summary>
+        <summary class="gk__section-title">Wrota</summary>
         <div class="gk__section-body">
 
           <div class="gk__field">
@@ -110,7 +131,7 @@
               <option value="2.4">2,4 m</option>
               <option value="2.8" selected>2,8 m</option>
               <option value="3.0">3,0 m</option>
-              <option value="4.0">4,0 m <span>+500 PLN</span></option>
+              <option value="4.0">4,0 m +500 PLN</option>
               <option value="5.0">5,0 m +500 PLN</option>
             </select>
           </div>
@@ -119,7 +140,7 @@
       </details>
 
       <details class="gk__section" open>
-        <summary class="gk__section-title">🎨 Kolory</summary>
+        <summary class="gk__section-title">Kolory</summary>
         <div class="gk__section-body">
 
           <div class="gk__field">
@@ -142,7 +163,7 @@
                       style="background:#0d4a8b" title="RAL 5010 – Niebieski"></button>
               <button type="button" class="gk__swatch" aria-pressed="false"
                       data-color="RAL 9010" data-config-key="wall_color"
-                      style="background:#f4f4f4;border:1px solid #ccc" title="RAL 9010 – Biały"></button>
+                      style="background:#f4f4f4;border:1px solid #555" title="RAL 9010 – Biały"></button>
               <button type="button" class="gk__swatch" aria-pressed="false"
                       data-color="RAL 1015" data-config-key="wall_color"
                       style="background:#e6d6a8" title="RAL 1015 – Beżowy"></button>
@@ -170,7 +191,7 @@
                       style="background:#0d4a8b" title="RAL 5010 – Niebieski"></button>
               <button type="button" class="gk__swatch" aria-pressed="false"
                       data-color="RAL 9010" data-config-key="roof_color"
-                      style="background:#f4f4f4;border:1px solid #ccc" title="RAL 9010 – Biały"></button>
+                      style="background:#f4f4f4;border:1px solid #555" title="RAL 9010 – Biały"></button>
               <button type="button" class="gk__swatch" aria-pressed="false"
                       data-color="RAL 1015" data-config-key="roof_color"
                       style="background:#e6d6a8" title="RAL 1015 – Beżowy"></button>
@@ -182,7 +203,7 @@
       </details>
 
       <details class="gk__section" open>
-        <summary class="gk__section-title">➕ Dodatki</summary>
+        <summary class="gk__section-title">Dodatki</summary>
         <div class="gk__section-body">
 
           <div class="gk__field">
@@ -247,7 +268,7 @@
 
       <!-- Podsumowanie wyceny -->
       <div class="gk__summary" id="gk-summary">
-        <h3 class="gk__summary-title">Wycena</h3>
+        <h3 class="gk__summary-title">Wycena orientacyjna</h3>
         <div class="gk__breakdown" id="gk-price-breakdown"></div>
         <div class="gk__summary-total">
           <span class="gk__summary-total-label">Szacunkowa wycena:</span>
@@ -259,17 +280,67 @@
       <!-- Przyciski akcji -->
       <div class="gk__actions">
         <button type="button" class="gk__btn gk__btn--secondary" id="gk-btn-pdf">
-          ⬇ Pobierz PDF
+          Pobierz PDF
         </button>
         <button type="button" class="gk__btn gk__btn--primary" id="gk-btn-email-open">
-          ✉ Wyślij wycenę e-mailem
+          Poproś o wycenę &#8594;
         </button>
       </div>
 
     </div><!-- /.gk__preview-panel -->
   </div><!-- /.gk__layout -->
 
-  <!-- ===== MODAL EMAIL ===== -->
+  <!-- ===== KROK 2: DANE KONTAKTOWE ===== -->
+  <div class="gk__form-section" id="gk-form-section">
+
+    <div class="gk__divider">
+      <span>Krok 2 — Twoje dane kontaktowe</span>
+    </div>
+
+    <div class="gk__form-wrapper">
+
+      <div class="gk__form-intro">
+        <h3 class="gk__form-title">Poproś o szczegółową wycenę</h3>
+        <p class="gk__form-desc">Nasz doradca prześle Ci ofertę na skonfigurowany garaż i odpowie na wszelkie pytania.</p>
+      </div>
+
+      <form class="gk__form" id="gk-email-form" novalidate>
+        <div class="gk__form-grid">
+          <div class="gk__field">
+            <label for="gk-name">Imię i nazwisko <span class="gk__required">*</span></label>
+            <input type="text" id="gk-name" name="customer_name"
+                   required maxlength="100" autocomplete="name"
+                   placeholder="Jan Kowalski">
+          </div>
+          <div class="gk__field">
+            <label for="gk-email">Adres e-mail <span class="gk__required">*</span></label>
+            <input type="email" id="gk-email" name="customer_email"
+                   required autocomplete="email"
+                   placeholder="jan@przykład.pl">
+          </div>
+          <div class="gk__field">
+            <label for="gk-phone">Numer telefonu <span class="gk__optional">(opcjonalnie)</span></label>
+            <input type="tel" id="gk-phone" name="customer_phone"
+                   autocomplete="tel"
+                   placeholder="+48 123 456 789">
+          </div>
+        </div>
+        <div class="gk__field gk__field--checkbox">
+          <label class="gk__checkbox-label">
+            <input type="checkbox" id="gk-consent" name="consent" required>
+            <span>Wyrażam zgodę na przetwarzanie moich danych osobowych w celu przygotowania i przesłania wyceny garażu. <span class="gk__required">*</span></span>
+          </label>
+        </div>
+        <div class="gk__form-status" id="gk-form-status" role="status" aria-live="polite"></div>
+        <button type="submit" class="gk__btn gk__btn--primary gk__btn--full" id="gk-submit-btn">
+          Wyślij zapytanie o wycenę
+        </button>
+      </form>
+
+    </div><!-- /.gk__form-wrapper -->
+  </div><!-- /.gk__form-section -->
+
+  <!-- MODAL (dla kompatybilności z automatycznymi testami) -->
   <div class="gk__modal-overlay" id="gk-modal-overlay" hidden aria-hidden="true"></div>
   <div class="gk__modal" id="gk-modal" role="dialog"
        aria-modal="true" aria-labelledby="gk-modal-title" hidden>
@@ -278,34 +349,13 @@
               aria-label="Zamknij okno dialogowe">&times;</button>
       <h2 class="gk__modal-title" id="gk-modal-title">Wyślij wycenę e-mailem</h2>
       <p class="gk__modal-subtitle">Wyślemy Ci szczegółową wycenę skonfigurowanego garażu.</p>
-
-      <form class="gk__form" id="gk-email-form" novalidate>
-        <div class="gk__field">
-          <label for="gk-name">Imię i nazwisko <span class="gk__required">*</span></label>
-          <input type="text" id="gk-name" name="customer_name"
-                 required maxlength="100" autocomplete="name">
-        </div>
-        <div class="gk__field">
-          <label for="gk-email">Adres e-mail <span class="gk__required">*</span></label>
-          <input type="email" id="gk-email" name="customer_email"
-                 required autocomplete="email">
-        </div>
-        <div class="gk__field">
-          <label for="gk-phone">Telefon <span class="gk__optional">(opcjonalnie)</span></label>
-          <input type="tel" id="gk-phone" name="customer_phone"
-                 autocomplete="tel">
-        </div>
-        <div class="gk__field gk__field--checkbox">
-          <label class="gk__checkbox-label">
-            <input type="checkbox" id="gk-consent" name="consent" required>
-            <span>Wyrażam zgodę na przetwarzanie moich danych osobowych w celu otrzymania wyceny. <span class="gk__required">*</span></span>
-          </label>
-        </div>
-        <div class="gk__form-status" id="gk-form-status" role="status" aria-live="polite"></div>
-        <button type="submit" class="gk__btn gk__btn--primary gk__btn--full" id="gk-submit-btn">
-          Wyślij wycenę
-        </button>
-      </form>
+      <p style="color:var(--gk-text-muted);font-size:13px;">
+        Formularz kontaktowy znajdziesz poniżej konfiguratora.
+      </p>
+      <button type="button" class="gk__btn gk__btn--primary gk__btn--full"
+              style="margin-top:16px;" id="gk-modal-scroll-btn">
+        Przejdź do formularza &#8594;
+      </button>
     </div>
   </div>
 

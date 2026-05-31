@@ -502,7 +502,23 @@
     document.body.style.overflow = '';
   }
 
-  document.getElementById('gk-btn-email-open')?.addEventListener('click', openModal);
+  function scrollToForm() {
+    const formSection = document.getElementById('gk-form-section');
+    if (formSection) {
+      formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const step2 = document.getElementById('gk-step-2');
+      if (step2) {
+        document.getElementById('gk-step-1')?.classList.remove('gk__step--active');
+        step2.classList.add('gk__step--active');
+      }
+    }
+  }
+
+  document.getElementById('gk-btn-email-open')?.addEventListener('click', scrollToForm);
+  document.getElementById('gk-modal-scroll-btn')?.addEventListener('click', function () {
+    closeModal();
+    scrollToForm();
+  });
   document.getElementById('gk-modal-close')?.addEventListener('click', closeModal);
   overlay?.addEventListener('click', closeModal);
 
@@ -557,7 +573,9 @@
           statusEl.className   = 'gk__form-status gk__form-status--success';
           statusEl.textContent = data.data.message;
           this.reset();
-          setTimeout(closeModal, 2200);
+          document.getElementById('gk-step-2')?.classList.add('gk__step--done');
+          submitBtn.textContent = 'Wysłano ✓';
+          submitBtn.disabled    = true;
         } else {
           showErr(data.data?.message || 'Wystąpił błąd. Spróbuj ponownie.');
         }
