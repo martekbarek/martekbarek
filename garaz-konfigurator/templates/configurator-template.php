@@ -242,6 +242,15 @@
 
       <!-- SVG Wizualizacja -->
       <div class="gk__svg-wrapper">
+        <button type="button" class="gk__rotate-btn" id="gk-btn-rotate"
+                title="Obróć widok" aria-label="Obróć widok garażu">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M23 4v6h-6"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </button>
         <svg id="gk-svg" xmlns="http://www.w3.org/2000/svg"
              viewBox="0 0 700 420" aria-label="Izometryczna wizualizacja garażu">
           <defs>

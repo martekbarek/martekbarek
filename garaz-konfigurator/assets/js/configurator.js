@@ -41,6 +41,7 @@
     sideDoor:    false,
     gutters:     false,
     ventilation: false,
+    viewAngle:   0,        // 0=front-left  1=right  2=back  3=left
   };
 
   /* ------------------------------------------------------------------ */
@@ -140,9 +141,19 @@
     /* Isometric origin — bottom-front-left corner of garage */
     const ox = 350;
     const oy = 310;
+    const va = state.viewAngle;
 
-    /* Helper: iso point from garage coords (x=width, z=depth, y=height) */
-    const ip = (x, z, y) => isoPoint(x, z, y, scale, ox, oy);
+    /* Helper: iso point — rotates the world around Y before projecting */
+    const ip = (x, z, y) => {
+      let fx, fz;
+      switch (va) {
+        case 1: fx = z;     fz = W - x;  break;  // 90° CW
+        case 2: fx = W - x; fz = L - z;  break;  // 180°
+        case 3: fx = L - z; fz = x;      break;  // 270° CW
+        default: fx = x;    fz = z;               // 0° (default)
+      }
+      return isoPoint(fx, fz, y, scale, ox, oy);
+    };
 
     /* Corner points of the base box */
     const A  = ip(0, 0, 0);   // front-left  bottom
@@ -167,19 +178,39 @@
       ry="${((W + L) * SIN30 * scale * 0.20).toFixed(1)}"
       fill="rgba(0,0,0,0.10)" />`;
 
-    /* ---- LEFT SIDE WALL (drawn first — behind front face) ---- */
-    html += `<polygon points="${pts([A, D, D1, A1])}"
-      fill="${wcd}" stroke="#222" stroke-width="1.2"/>`;
-    html += `<polygon points="${pts([A, D, D1, A1])}"
-      fill="url(#gk-grad-side)" stroke="none"/>`;
+    /* ---- WALLS — painter's algorithm, view-adaptive ---- */
+    // For each view the "side" face goes upper-left (drawn first = behind),
+    // the "front" face goes upper-right (drawn second = in front).
+    const SIDE_CORNERS = [
+      [[0,0,0],[0,L,0],[0,L,H],[0,0,H]],   // v0: left (x=0)
+      [[0,0,0],[W,0,0],[W,0,H],[0,0,H]],   // v1: gate face (z=0) as side
+      [[W,0,0],[W,L,0],[W,L,H],[W,0,H]],   // v2: right (x=W)
+      [[0,L,0],[W,L,0],[W,L,H],[0,L,H]],   // v3: back (z=L)
+    ];
+    const FRONT_CORNERS = [
+      [[0,0,0],[W,0,0],[W,0,H],[0,0,H]],   // v0: gate face (z=0)
+      [[W,0,0],[W,L,0],[W,L,H],[W,0,H]],   // v1: right (x=W)
+      [[0,L,0],[W,L,0],[W,L,H],[0,L,H]],   // v2: back (z=L)
+      [[0,0,0],[0,L,0],[0,L,H],[0,0,H]],   // v3: left (x=0)
+    ];
+    const swPts = SIDE_CORNERS[va].map(([x,z,y]) => ip(x,z,y));
+    const ffPts = FRONT_CORNERS[va].map(([x,z,y]) => ip(x,z,y));
 
-    /* ---- FRONT WALL ---- */
-    html += `<polygon points="${pts([A, B, B1, A1])}"
-      fill="${wc}" stroke="#222" stroke-width="1.2"/>`;
-    html += `<polygon points="${pts([A, B, B1, A1])}"
-      fill="url(#gk-grad-front)" stroke="none"/>`;
+    html += `<polygon points="${pts(swPts)}" fill="${wcd}" stroke="#222" stroke-width="1.2"/>`;
+    html += `<polygon points="${pts(swPts)}" fill="url(#gk-grad-side)" stroke="none"/>`;
+    html += `<polygon points="${pts(ffPts)}" fill="${wc}" stroke="#222" stroke-width="1.2"/>`;
+    html += `<polygon points="${pts(ffPts)}" fill="url(#gk-grad-front)" stroke="none"/>`;
 
-    /* ---- GATE (on front face) ---- */
+    /* Visibility per face:
+       z=0 (gate face): frontFace in v=0, sideWall in v=1, hidden in v=2/3
+       x=0 (left wall): sideWall in v=0, frontFace in v=3, hidden in v=1/2 */
+    const gateVisible       = va === 0 || va === 1;
+    const frontFeatsVisible = va === 0 || va === 1;
+    const sideFeatsVisible  = va === 0 || va === 3;
+
+    const gFill = darken(wc, 0.08);
+
+    /* ---- GATE (z=0 face) ---- */
     const gw    = Math.min(state.gateWidth, W * 0.85);
     const gx0   = (W - gw) / 2;
     const gx1   = gx0 + gw;
@@ -188,8 +219,8 @@
     const GB    = ip(gx1, 0, 0);
     const GA1   = ip(gx0, 0, gh);
     const GB1   = ip(gx1, 0, gh);
-    const gFill = darken(wc, 0.08);
 
+    if (gateVisible) {
     html += `<polygon points="${pts([GA, GB, GB1, GA1])}"
       fill="${gFill}" stroke="#333" stroke-width="1"/>`;
 
@@ -223,9 +254,10 @@
         x2="${GA1.x.toFixed(1)}" y2="${GA1.y.toFixed(1)}"
         stroke="#555" stroke-width="0.9" opacity="0.6"/>`;
     }
+    } // end gateVisible
 
-    /* ---- WINDOWS (front wall) ---- */
-    if (state.windows > 0) {
+    /* ---- WINDOWS (z=0 face — visible in v=0 and v=1) ---- */
+    if (frontFeatsVisible && state.windows > 0) {
       const winW = 0.6;
       const winH = 0.55;
       const winY = H * 0.45;
@@ -259,8 +291,8 @@
       });
     }
 
-    /* ---- SIDE DOOR (left wall — visible) ---- */
-    if (state.sideDoor) {
+    /* ---- SIDE DOOR (x=0 face — visible in v=0 and v=3) ---- */
+    if (sideFeatsVisible && state.sideDoor) {
       const dw  = 0.9;
       const dh  = H * 0.78;
       const dz0 = L * 0.25;
@@ -277,8 +309,8 @@
         stroke="#555" stroke-width="0.7"/>`;
     }
 
-    /* ---- VENTILATION (left wall near top — visible) ---- */
-    if (state.ventilation) {
+    /* ---- VENTILATION (x=0 face — visible in v=0 and v=3) ---- */
+    if (sideFeatsVisible && state.ventilation) {
       const vw  = 0.5;
       const vh  = 0.25;
       const vz0 = L * 0.65;
@@ -513,6 +545,11 @@
       }
     }
   }
+
+  document.getElementById('gk-btn-rotate')?.addEventListener('click', function () {
+    state.viewAngle = (state.viewAngle + 1) % 4;
+    update();
+  });
 
   document.getElementById('gk-btn-email-open')?.addEventListener('click', scrollToForm);
   document.getElementById('gk-modal-scroll-btn')?.addEventListener('click', function () {

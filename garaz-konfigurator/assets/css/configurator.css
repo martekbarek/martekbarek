@@ -661,6 +661,36 @@
   color: var(--gk-text-muted);
 }
 
+/* ---- Rotate button (overlaid on SVG) ---- */
+.gk__rotate-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--gk-border-lit);
+  background: rgba(0,0,0,0.55);
+  color: var(--gk-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, transform 0.3s;
+  z-index: 10;
+  padding: 0;
+}
+
+.gk__rotate-btn:hover {
+  border-color: var(--gk-accent);
+  color: var(--gk-accent);
+  background: rgba(224,120,0,0.15);
+}
+
+.gk__rotate-btn:active {
+  transform: rotate(90deg);
+}
+
 /* ---- Inline form section (Step 2) ---- */
 .gk__form-section {
   margin-top: 40px;
