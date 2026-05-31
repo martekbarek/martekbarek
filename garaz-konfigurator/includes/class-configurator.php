@@ -52,6 +52,14 @@ class Garaz_Configurator {
 				'sideDoor'        => 600,
 				'gutters'         => 400,
 				'ventilation'     => 300,
+				// Domek narzędziowy
+				'domekBasePerSqm' => 600,
+				'domekWindow'     => 400,
+				'domekWoodAccents'=> 800,
+				'domekGutters'    => 300,
+				// Wiata śmietnikowa
+				'wiataPerBin'     => [ 0, 1500, 2200, 3000, 3800 ],
+				'wiataClosedFront'=> 500,
 			],
 		] );
 
