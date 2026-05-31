@@ -1,13 +1,32 @@
 <?php defined( 'ABSPATH' ) || exit; ?>
 
-<div id="garaz-konfigurator" class="gk" role="main" aria-label="Konfigurator garażu blaszanego">
+<div id="garaz-konfigurator" class="gk" role="main" aria-label="Konfigurator produktów stalowych">
 
   <!-- ===== HEADER ===== -->
   <header class="gk__header">
     <p class="gk__header-label">Konfigurator online</p>
-    <h2>Konfiguruj swój garaż blaszany</h2>
-    <p>Wybierz wymiary, kolor i wyposażenie — orientacyjna wycena pojawia się natychmiast</p>
+    <h2>Skonfiguruj swój produkt</h2>
+    <p>Wybierz typ produktu, wymiary i wyposażenie — orientacyjna wycena pojawia się natychmiast</p>
   </header>
+
+  <!-- ===== ZAKŁADKI PRODUKTÓW ===== -->
+  <div class="gk__product-tabs" role="tablist" aria-label="Typ produktu">
+    <button type="button" class="gk__product-tab gk__product-tab--active"
+            role="tab" aria-selected="true" data-product="garaz">
+      <span class="gk__tab-icon">🏠</span>
+      Garaż blaszany
+    </button>
+    <button type="button" class="gk__product-tab"
+            role="tab" aria-selected="false" data-product="domek">
+      <span class="gk__tab-icon">🔧</span>
+      Domek narzędziowy
+    </button>
+    <button type="button" class="gk__product-tab"
+            role="tab" aria-selected="false" data-product="wiata">
+      <span class="gk__tab-icon">♻</span>
+      Wiata śmietnikowa
+    </button>
+  </div>
 
   <!-- ===== KROKI ===== -->
   <nav class="gk__steps" aria-label="Etapy formularza">
@@ -28,11 +47,12 @@
     <!-- PANEL STEROWANIA -->
     <aside class="gk__controls" aria-label="Opcje konfiguracji">
 
-      <details class="gk__section" open>
+      <!-- WYMIARY — widoczne dla garaż + domek + wiata -->
+      <details class="gk__section" open data-show-for="garaz domek wiata">
         <summary class="gk__section-title">Wymiary</summary>
         <div class="gk__section-body">
 
-          <div class="gk__field">
+          <div class="gk__field" data-show-for="garaz domek">
             <label for="gk-width">Szerokość</label>
             <select id="gk-width" data-config-key="width">
               <option value="3">3 m</option>
@@ -46,7 +66,7 @@
             </select>
           </div>
 
-          <div class="gk__field">
+          <div class="gk__field" data-show-for="garaz domek">
             <label for="gk-length">Długość</label>
             <select id="gk-length" data-config-key="length">
               <option value="5">5 m</option>
@@ -60,7 +80,7 @@
             </select>
           </div>
 
-          <div class="gk__field">
+          <div class="gk__field" data-show-for="garaz domek">
             <label for="gk-wall-height">Wysokość ścian</label>
             <select id="gk-wall-height" data-config-key="wall_height">
               <option value="2.0">2,0 m</option>
@@ -71,10 +91,22 @@
             </select>
           </div>
 
+          <!-- Liczba stanowisk — tylko wiata -->
+          <div class="gk__field" data-show-for="wiata" hidden>
+            <label for="gk-bin-count">Liczba stanowisk (pojemników)</label>
+            <select id="gk-bin-count" data-config-key="bin_count">
+              <option value="1">1 stanowisko</option>
+              <option value="2" selected>2 stanowiska</option>
+              <option value="3">3 stanowiska</option>
+              <option value="4">4 stanowiska</option>
+            </select>
+          </div>
+
         </div>
       </details>
 
-      <details class="gk__section" open>
+      <!-- DAH — tylko garaż -->
+      <details class="gk__section" open data-show-for="garaz">
         <summary class="gk__section-title">Dach</summary>
         <div class="gk__section-body">
 
@@ -100,7 +132,8 @@
         </div>
       </details>
 
-      <details class="gk__section" open>
+      <!-- WROTA — tylko garaż -->
+      <details class="gk__section" open data-show-for="garaz">
         <summary class="gk__section-title">Wrota</summary>
         <div class="gk__section-body">
 
@@ -139,7 +172,8 @@
         </div>
       </details>
 
-      <details class="gk__section" open>
+      <!-- KOLORY — garaż + domek -->
+      <details class="gk__section" open data-show-for="garaz domek">
         <summary class="gk__section-title">Kolory</summary>
         <div class="gk__section-body">
 
@@ -171,7 +205,7 @@
             <p class="gk__swatch-label" id="gk-wall-color-label">RAL 7016 – Antracyt</p>
           </div>
 
-          <div class="gk__field">
+          <div class="gk__field" data-show-for="garaz">
             <label>Kolor dachu</label>
             <div class="gk__swatches" data-config-key="roof_color">
               <button type="button" class="gk__swatch" aria-pressed="true"
@@ -202,7 +236,8 @@
         </div>
       </details>
 
-      <details class="gk__section" open>
+      <!-- DODATKI GARAŻ — tylko garaż -->
+      <details class="gk__section" open data-show-for="garaz">
         <summary class="gk__section-title">Dodatki</summary>
         <div class="gk__section-body">
 
@@ -235,6 +270,49 @@
         </div>
       </details>
 
+      <!-- OPCJE DOMKU NARZĘDZIOWEGO — tylko domek -->
+      <details class="gk__section" open data-show-for="domek" hidden>
+        <summary class="gk__section-title">Wyposażenie domku</summary>
+        <div class="gk__section-body">
+
+          <div class="gk__field">
+            <label for="gk-domek-windows">Okna</label>
+            <select id="gk-domek-windows" data-config-key="windows">
+              <option value="0" selected>Bez okien</option>
+              <option value="1">1 okno (+400 PLN)</option>
+              <option value="2">2 okna (+800 PLN)</option>
+            </select>
+          </div>
+
+          <div class="gk__checkbox-group">
+            <label class="gk__checkbox-label">
+              <input type="checkbox" data-config-key="wood_accents">
+              <span>Akcenty drewniane <span class="gk__price-tag">+800 PLN</span></span>
+            </label>
+            <label class="gk__checkbox-label">
+              <input type="checkbox" data-config-key="gutters">
+              <span>Rynny <span class="gk__price-tag">+300 PLN</span></span>
+            </label>
+          </div>
+
+        </div>
+      </details>
+
+      <!-- OPCJE WIATY ŚMIETNIKOWEJ — tylko wiata -->
+      <details class="gk__section" open data-show-for="wiata" hidden>
+        <summary class="gk__section-title">Opcje wiaty</summary>
+        <div class="gk__section-body">
+
+          <div class="gk__checkbox-group">
+            <label class="gk__checkbox-label">
+              <input type="checkbox" data-config-key="closed_front">
+              <span>Zamknięty front (drzwiczki) <span class="gk__price-tag">+500 PLN</span></span>
+            </label>
+          </div>
+
+        </div>
+      </details>
+
     </aside>
 
     <!-- ===== PANEL PODGLĄDU ===== -->
@@ -252,7 +330,7 @@
           </svg>
         </button>
         <svg id="gk-svg" xmlns="http://www.w3.org/2000/svg"
-             viewBox="0 0 700 420" aria-label="Izometryczna wizualizacja garażu">
+             viewBox="0 0 700 420" aria-label="Izometryczna wizualizacja produktu">
           <defs>
             <linearGradient id="gk-grad-front" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="rgba(255,255,255,0.18)"/>
@@ -310,7 +388,7 @@
 
       <div class="gk__form-intro">
         <h3 class="gk__form-title">Poproś o szczegółową wycenę</h3>
-        <p class="gk__form-desc">Nasz doradca prześle Ci ofertę na skonfigurowany garaż i odpowie na wszelkie pytania.</p>
+        <p class="gk__form-desc">Nasz doradca prześle Ci ofertę na skonfigurowany produkt i odpowie na wszelkie pytania.</p>
       </div>
 
       <form class="gk__form" id="gk-email-form" novalidate>
@@ -337,7 +415,7 @@
         <div class="gk__field gk__field--checkbox">
           <label class="gk__checkbox-label">
             <input type="checkbox" id="gk-consent" name="consent" required>
-            <span>Wyrażam zgodę na przetwarzanie moich danych osobowych w celu przygotowania i przesłania wyceny garażu. <span class="gk__required">*</span></span>
+            <span>Wyrażam zgodę na przetwarzanie moich danych osobowych w celu przygotowania i przesłania wyceny. <span class="gk__required">*</span></span>
           </label>
         </div>
         <div class="gk__form-status" id="gk-form-status" role="status" aria-live="polite"></div>
@@ -357,7 +435,7 @@
       <button type="button" class="gk__modal-close" id="gk-modal-close"
               aria-label="Zamknij okno dialogowe">&times;</button>
       <h2 class="gk__modal-title" id="gk-modal-title">Wyślij wycenę e-mailem</h2>
-      <p class="gk__modal-subtitle">Wyślemy Ci szczegółową wycenę skonfigurowanego garażu.</p>
+      <p class="gk__modal-subtitle">Wyślemy Ci szczegółową wycenę skonfigurowanego produktu.</p>
       <p style="color:var(--gk-text-muted);font-size:13px;">
         Formularz kontaktowy znajdziesz poniżej konfiguratora.
       </p>

@@ -68,6 +68,60 @@
   margin: 0 auto;
 }
 
+/* ---- Product type tabs ---- */
+.gk__product-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  background: var(--gk-bg-section);
+  border: 1px solid var(--gk-border);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.gk__product-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 16px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--gk-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--gk-font);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.gk__product-tab:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--gk-text);
+}
+
+.gk__product-tab--active {
+  background: var(--gk-accent);
+  color: #fff;
+}
+
+.gk__product-tab--active:hover {
+  background: var(--gk-accent-h);
+}
+
+.gk__tab-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+@media (max-width: 600px) {
+  .gk__product-tabs { flex-direction: column; }
+  .gk__product-tab  { justify-content: flex-start; padding: 10px 14px; }
+}
+
 /* ---- Steps indicator ---- */
 .gk__steps {
   display: flex;

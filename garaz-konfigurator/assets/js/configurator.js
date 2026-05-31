@@ -42,6 +42,10 @@
     gutters:     false,
     ventilation: false,
     viewAngle:   0,        // 0=front-left  1=right  2=back  3=left
+    productType:  'garaz', // 'garaz' | 'domek' | 'wiata'
+    woodAccents:  false,
+    closedFront:  false,
+    binCount:     2,
   };
 
   /* ------------------------------------------------------------------ */
@@ -49,6 +53,8 @@
   /* ------------------------------------------------------------------ */
 
   function calcPrice() {
+    if (state.productType === 'domek') return calcPrice_domek();
+    if (state.productType === 'wiata') return calcPrice_wiata();
     const p = Config.pricing;
     let t = state.width * state.length * p.basePerSqm;
     if (state.roofType === 'dwuspadowy') t *= 1 + p.gableRoofPct;
@@ -66,6 +72,8 @@
   }
 
   function renderBreakdown() {
+    if (state.productType === 'domek') { renderBreakdown_domek(); return; }
+    if (state.productType === 'wiata') { renderBreakdown_wiata(); return; }
     const p  = Config.pricing;
     const wl = state.wallColor;
     const area = state.width * state.length;
@@ -127,6 +135,8 @@
   }
 
   function renderSVG() {
+    if (state.productType === 'domek') { renderSVG_domek(); return; }
+    if (state.productType === 'wiata') { renderSVG_wiata(); return; }
     const scene = document.getElementById('gk-svg-scene');
     if (!scene) return;
 
@@ -451,6 +461,375 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* DOMEK NARZĘDZIOWY — SVG RENDERER                                    */
+  /* ------------------------------------------------------------------ */
+
+  function renderSVG_domek() {
+    const scene = document.getElementById('gk-svg-scene');
+    if (!scene) return;
+
+    const W = state.width, L = state.length, H = state.wallHeight;
+    const scale = 200 / Math.max(W, L, H * 2.5);
+    const ox = 350, oy = 310, va = state.viewAngle;
+
+    const ip = (x, z, y) => {
+      let fx, fz;
+      switch (va) {
+        case 1: fx = z;     fz = W - x;  break;
+        case 2: fx = W - x; fz = L - z;  break;
+        case 3: fx = L - z; fz = x;      break;
+        default: fx = x;    fz = z;
+      }
+      return isoPoint(fx, fz, y, scale, ox, oy);
+    };
+
+    const wc = state.wallColor, rc = state.roofColor, wcd = darken(wc, 0.28);
+    let html = '';
+
+    html += `<ellipse cx="${(ox + (W-L)*COS30*scale*0.35).toFixed(1)}"
+      cy="${(oy+6).toFixed(1)}"
+      rx="${((W+L)*COS30*scale*0.52).toFixed(1)}"
+      ry="${((W+L)*SIN30*scale*0.20).toFixed(1)}"
+      fill="rgba(0,0,0,0.10)"/>`;
+
+    const SIDE_C = [
+      [[0,0,0],[0,L,0],[0,L,H],[0,0,H]],
+      [[0,0,0],[W,0,0],[W,0,H],[0,0,H]],
+      [[W,0,0],[W,L,0],[W,L,H],[W,0,H]],
+      [[0,L,0],[W,L,0],[W,L,H],[0,L,H]],
+    ];
+    const FRONT_C = [
+      [[0,0,0],[W,0,0],[W,0,H],[0,0,H]],
+      [[W,0,0],[W,L,0],[W,L,H],[W,0,H]],
+      [[0,L,0],[W,L,0],[W,L,H],[0,L,H]],
+      [[0,0,0],[0,L,0],[0,L,H],[0,0,H]],
+    ];
+    const swPts = SIDE_C[va].map(([x,z,y]) => ip(x,z,y));
+    const ffPts = FRONT_C[va].map(([x,z,y]) => ip(x,z,y));
+
+    html += `<polygon points="${pts(swPts)}" fill="${wcd}" stroke="#222" stroke-width="1.2"/>`;
+    html += `<polygon points="${pts(ffPts)}" fill="${wc}"  stroke="#222" stroke-width="1.2"/>`;
+
+    /* Vertical panel seams */
+    const PW = 0.18;
+    const SW_CFG = [
+      {d:'z',f:0,n:L}, {d:'x',f:0,n:W}, {d:'z',f:W,n:L}, {d:'x',f:L,n:W},
+    ][va];
+    const FF_CFG = [
+      {d:'x',f:0,n:W}, {d:'z',f:W,n:L}, {d:'x',f:L,n:W}, {d:'z',f:0,n:L},
+    ][va];
+
+    function seams(cfg, a) {
+      for (let i = 1; i * PW < cfg.n - 0.01; i++) {
+        const t = i * PW;
+        const P0 = cfg.d==='x' ? ip(t,cfg.f,0) : ip(cfg.f,t,0);
+        const P1 = cfg.d==='x' ? ip(t,cfg.f,H) : ip(cfg.f,t,H);
+        const maj = i%3===0;
+        html += `<line x1="${P0.x.toFixed(1)}" y1="${P0.y.toFixed(1)}"
+          x2="${P1.x.toFixed(1)}" y2="${P1.y.toFixed(1)}"
+          stroke="rgba(0,0,0,${maj ? a*1.8 : a})"
+          stroke-width="${maj ? 1.0 : 0.65}"/>`;
+      }
+    }
+    seams(SW_CFG, 0.10);
+    seams(FF_CFG, 0.14);
+
+    const gateVisible = va===0||va===1;
+    const gFill = darken(wc, 0.06);
+
+    /* Wooden accent strips */
+    if (state.woodAccents && gateVisible) {
+      const wW = 0.22;
+      const wPos = W >= 3 ? [W*0.25 - wW/2, W*0.70 - wW/2] : [W*0.42 - wW/2];
+      wPos.forEach(wx => {
+        const WA=ip(wx,0,0), WB=ip(wx+wW,0,0), WA1=ip(wx,0,H), WB1=ip(wx+wW,0,H);
+        html += `<polygon points="${pts([WA,WB,WB1,WA1])}"
+          fill="#8B6040" stroke="#5a3820" stroke-width="0.7" opacity="0.92"/>`;
+        for (let k=1;k<=4;k++) {
+          const gx=wx+wW*k/5, G0=ip(gx,0,0), G1=ip(gx,0,H);
+          html += `<line x1="${G0.x.toFixed(1)}" y1="${G0.y.toFixed(1)}"
+            x2="${G1.x.toFixed(1)}" y2="${G1.y.toFixed(1)}"
+            stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>`;
+        }
+      });
+    }
+
+    /* Entry door */
+    if (gateVisible) {
+      const dW = 0.95, dH = H * 0.92;
+      let dx = state.woodAccents && W>=3 ? W*0.55 : (W-dW)/2;
+      dx = Math.max(0.15, Math.min(dx, W-dW-0.15));
+      const DA=ip(dx,0,0), DB=ip(dx+dW,0,0), DA1=ip(dx,0,dH), DB1=ip(dx+dW,0,dH);
+      html += `<polygon points="${pts([DA,DB,DB1,DA1])}"
+        fill="${gFill}" stroke="#1a1a1a" stroke-width="1"/>`;
+      html += `<polygon points="${pts([DA,DB,DB1,DA1])}"
+        fill="none" stroke="${darken(wc,0.35)}" stroke-width="1.8"/>`;
+      const hx = dx + dW*0.78;
+      const H0=ip(hx,0,dH*0.44), H1=ip(hx,0,dH*0.36);
+      html += `<line x1="${H0.x.toFixed(1)}" y1="${H0.y.toFixed(1)}"
+        x2="${H1.x.toFixed(1)}" y2="${H1.y.toFixed(1)}"
+        stroke="#bbb" stroke-width="2.5" stroke-linecap="round"/>`;
+    }
+
+    /* Windows */
+    if (gateVisible && state.windows > 0) {
+      const wW=0.65, wH=0.60, wY=H*0.42;
+      const wp = [W*0.10];
+      if (state.windows >= 2) wp.push(W*0.10 + wW + 0.20);
+      wp.forEach(wx => {
+        wx = Math.max(0.1, Math.min(wx, W-wW-0.1));
+        const WA=ip(wx,0,wY), WB=ip(wx+wW,0,wY);
+        const WA1=ip(wx,0,wY+wH), WB1=ip(wx+wW,0,wY+wH);
+        html += `<polygon points="${pts([WA,WB,WB1,WA1])}"
+          fill="#c8e4f0" stroke="#6a9fc4" stroke-width="0.9" opacity="0.9"/>`;
+        const Mx=ip(wx+wW/2,0,wY), Mx1=ip(wx+wW/2,0,wY+wH);
+        const My=ip(wx,0,wY+wH/2), My1=ip(wx+wW,0,wY+wH/2);
+        html += `<line x1="${Mx.x.toFixed(1)}" y1="${Mx.y.toFixed(1)}"
+          x2="${Mx1.x.toFixed(1)}" y2="${Mx1.y.toFixed(1)}" stroke="#6a9fc4" stroke-width="0.6"/>`;
+        html += `<line x1="${My.x.toFixed(1)}" y1="${My.y.toFixed(1)}"
+          x2="${My1.x.toFixed(1)}" y2="${My1.y.toFixed(1)}" stroke="#6a9fc4" stroke-width="0.6"/>`;
+      });
+    }
+
+    /* Flat roof */
+    const ov = 0.2, rT = 0.10;
+    const rH = H + rT;
+    const RF_FL=ip(-ov,-ov,rH), RF_FR=ip(W+ov,-ov,rH);
+    const RF_BR=ip(W+ov,L+ov,rH), RF_BL=ip(-ov,L+ov,rH);
+    const RE_FL=ip(-ov,-ov,H),  RE_FR=ip(W+ov,-ov,H);
+    html += `<polygon points="${pts([RF_FL,RF_FR,RF_BR,RF_BL])}"
+      fill="${darken(rc,0.12)}" stroke="#1a1a1a" stroke-width="1.2"/>`;
+    html += `<polygon points="${pts([RE_FL,RE_FR,RF_FR,RF_FL])}"
+      fill="${rc}" stroke="#1a1a1a" stroke-width="1.2"/>`;
+    if (va===0||va===3) {
+      const RE_BL=ip(-ov,L+ov,H);
+      html += `<polygon points="${pts([RE_FL,RF_FL,RF_BL,RE_BL])}"
+        fill="${darken(rc,0.22)}" stroke="#1a1a1a" stroke-width="1"/>`;
+    }
+
+    /* Gutters */
+    if (state.gutters) {
+      html += `<line x1="${RE_FL.x.toFixed(1)}" y1="${(RE_FL.y+1.5).toFixed(1)}"
+        x2="${RE_FR.x.toFixed(1)}" y2="${(RE_FR.y+1.5).toFixed(1)}"
+        stroke="#444" stroke-width="3" stroke-linecap="round"/>`;
+      if (va===0||va===3) {
+        const RE_BL=ip(-ov,L+ov,H);
+        html += `<line x1="${RE_FL.x.toFixed(1)}" y1="${(RE_FL.y+1.5).toFixed(1)}"
+          x2="${RE_BL.x.toFixed(1)}" y2="${(RE_BL.y+1.5).toFixed(1)}"
+          stroke="#444" stroke-width="3" stroke-linecap="round"/>`;
+      }
+    }
+
+    /* Dimension labels */
+    const lc = '#c0392b', lf = 12;
+    const dWA=ip(0,0,0), dWB=ip(W,0,0), dWM={x:(dWA.x+dWB.x)/2,y:(dWA.y+dWB.y)/2+18};
+    html += `<line x1="${dWA.x.toFixed(1)}" y1="${(dWA.y+10).toFixed(1)}"
+      x2="${dWB.x.toFixed(1)}" y2="${(dWB.y+10).toFixed(1)}"
+      stroke="${lc}" stroke-width="1"/>`;
+    html += `<text x="${dWM.x.toFixed(1)}" y="${(dWM.y+4).toFixed(1)}"
+      font-family="sans-serif" font-size="${lf}" fill="${lc}"
+      text-anchor="middle" font-weight="600">${state.width} m</text>`;
+    const dLA=ip(0,0,0), dLB=ip(0,L,0), dLM={x:(dLA.x+dLB.x)/2-20,y:(dLA.y+dLB.y)/2};
+    html += `<line x1="${(dLA.x-10).toFixed(1)}" y1="${dLA.y.toFixed(1)}"
+      x2="${(dLB.x-10).toFixed(1)}" y2="${dLB.y.toFixed(1)}"
+      stroke="${lc}" stroke-width="1"/>`;
+    html += `<text x="${dLM.x.toFixed(1)}" y="${dLM.y.toFixed(1)}"
+      font-family="sans-serif" font-size="${lf}" fill="${lc}"
+      text-anchor="end" dominant-baseline="middle" font-weight="600">${state.length} m</text>`;
+
+    scene.innerHTML = html;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* WIATA ŚMIETNIKOWA — SVG RENDERER                                    */
+  /* ------------------------------------------------------------------ */
+
+  function renderSVG_wiata() {
+    const scene = document.getElementById('gk-svg-scene');
+    if (!scene) return;
+
+    const bins = Math.max(1, Math.min(4, state.binCount));
+    const cW   = 0.84;    // compartment width
+    const pW   = 0.06;    // post width
+    const W    = bins * (cW + pW) + pW;
+    const L    = 0.78;
+    const H    = 1.30;
+    const scale = 180 / Math.max(W, L * 1.8, H * 2);
+    const ox = 350, oy = 310;
+    const ip = (x, z, y) => isoPoint(x, z, y, scale, ox, oy);
+
+    const wc = state.wallColor, rc = state.roofColor, wcd = darken(wc, 0.28);
+    let html = '';
+
+    html += `<ellipse cx="${ox}" cy="${(oy+6).toFixed(1)}"
+      rx="${(W*COS30*scale*0.9).toFixed(1)}"
+      ry="${((W+L)*SIN30*scale*0.18).toFixed(1)}"
+      fill="rgba(0,0,0,0.10)"/>`;
+
+    /* Back wall (drawn first) */
+    const BW_A=ip(0,L,0), BW_B=ip(W,L,0), BW_A1=ip(0,L,H), BW_B1=ip(W,L,H);
+    html += `<polygon points="${pts([BW_A,BW_B,BW_B1,BW_A1])}"
+      fill="${darken(wc,0.18)}" stroke="#222" stroke-width="1.2"/>`;
+    /* Back wall vertical seams */
+    const bPW = 0.18;
+    for (let i=1; i*bPW < W-0.01; i++) {
+      const t=i*bPW, P0=ip(t,L,0), P1=ip(t,L,H);
+      html += `<line x1="${P0.x.toFixed(1)}" y1="${P0.y.toFixed(1)}"
+        x2="${P1.x.toFixed(1)}" y2="${P1.y.toFixed(1)}"
+        stroke="rgba(0,0,0,0.12)" stroke-width="0.65"/>`;
+    }
+
+    /* Left wall */
+    const LW_A=ip(0,0,0), LW_D=ip(0,L,0), LW_D1=ip(0,L,H), LW_A1=ip(0,0,H);
+    html += `<polygon points="${pts([LW_A,LW_D,LW_D1,LW_A1])}"
+      fill="${wcd}" stroke="#222" stroke-width="1.2"/>`;
+
+    /* Bin dividers + front frame posts */
+    for (let i=0; i<=bins; i++) {
+      const px = i*(cW+pW);
+      /* Front post */
+      const PA=ip(px+pW*0.5,0,0), PA1=ip(px+pW*0.5,0,H);
+      html += `<line x1="${PA.x.toFixed(1)}" y1="${PA.y.toFixed(1)}"
+        x2="${PA1.x.toFixed(1)}" y2="${PA1.y.toFixed(1)}"
+        stroke="${darken(wc,0.45)}"
+        stroke-width="${i===0||i===bins ? 2.8 : 1.6}"/>`;
+      if (i>0 && i<bins) {
+        /* Inner divider back post */
+        const PB=ip(px+pW*0.5,L*0.88,0), PB1=ip(px+pW*0.5,L*0.88,H);
+        const p1=ip(px+pW*0.5,0,0),p2=ip(px+pW*0.5,L*0.88,0);
+        const p3=ip(px+pW*0.5,0,H),p4=ip(px+pW*0.5,L*0.88,H);
+        html += `<line x1="${p1.x.toFixed(1)}" y1="${p1.y.toFixed(1)}"
+          x2="${p2.x.toFixed(1)}" y2="${p2.y.toFixed(1)}"
+          stroke="${darken(wc,0.35)}" stroke-width="3.5" opacity="0.55"/>`;
+        html += `<line x1="${p3.x.toFixed(1)}" y1="${p3.y.toFixed(1)}"
+          x2="${p4.x.toFixed(1)}" y2="${p4.y.toFixed(1)}"
+          stroke="${darken(wc,0.35)}" stroke-width="3.5" opacity="0.55"/>`;
+      }
+    }
+
+    /* Optional closed front gates */
+    if (state.closedFront) {
+      for (let i=0; i<bins; i++) {
+        const gx0 = i*(cW+pW)+pW, gx1 = gx0+cW;
+        const GA=ip(gx0,0,0), GB=ip(gx1,0,0), GA1=ip(gx0,0,H), GB1=ip(gx1,0,H);
+        html += `<polygon points="${pts([GA,GB,GB1,GA1])}"
+          fill="${darken(wc,0.04)}" stroke="${darken(wc,0.4)}" stroke-width="0.9"
+          opacity="0.88"/>`;
+        const hx=gx0+(gx1-gx0)*0.82;
+        const H0=ip(hx,0,H*0.50), H1=ip(hx,0,H*0.44);
+        html += `<line x1="${H0.x.toFixed(1)}" y1="${H0.y.toFixed(1)}"
+          x2="${H1.x.toFixed(1)}" y2="${H1.y.toFixed(1)}"
+          stroke="#bbb" stroke-width="2" stroke-linecap="round"/>`;
+      }
+    }
+
+    /* Roof */
+    const ov=0.18, rT=0.09;
+    const rH=H+rT;
+    const RF_FL=ip(-ov,-ov,rH), RF_FR=ip(W+ov,-ov,rH);
+    const RF_BR=ip(W+ov,L+ov*0.4,rH), RF_BL=ip(-ov,L+ov*0.4,rH);
+    const RE_FL=ip(-ov,-ov,H), RE_FR=ip(W+ov,-ov,H);
+    html += `<polygon points="${pts([RF_FL,RF_FR,RF_BR,RF_BL])}"
+      fill="${darken(rc,0.10)}" stroke="#1a1a1a" stroke-width="1.2"/>`;
+    html += `<polygon points="${pts([RE_FL,RE_FR,RF_FR,RF_FL])}"
+      fill="${rc}" stroke="#1a1a1a" stroke-width="1.2"/>`;
+    const RE_BL=ip(-ov,L+ov*0.4,H);
+    html += `<polygon points="${pts([RE_FL,RF_FL,RF_BL,RE_BL])}"
+      fill="${darken(rc,0.22)}" stroke="#1a1a1a" stroke-width="1"/>`;
+
+    /* Label */
+    const lc='#c0392b';
+    const DA=ip(0,0,0), DB=ip(W,0,0);
+    const lY = Math.max(DA.y,DB.y) + 22;
+    html += `<line x1="${DA.x.toFixed(1)}" y1="${(lY-10).toFixed(1)}"
+      x2="${DB.x.toFixed(1)}" y2="${(lY-10).toFixed(1)}" stroke="${lc}" stroke-width="1"/>`;
+    html += `<text x="${((DA.x+DB.x)/2).toFixed(1)}" y="${lY.toFixed(1)}"
+      font-family="sans-serif" font-size="11" fill="${lc}"
+      text-anchor="middle" font-weight="600">${bins} ${bins===1?'pojemnik':bins<=4?'pojemniki':'pojemników'} · ${W.toFixed(1)} m</text>`;
+
+    scene.innerHTML = html;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* PRICING — DOMEK / WIATA                                             */
+  /* ------------------------------------------------------------------ */
+
+  function calcPrice_domek() {
+    const d = (Config.pricing.domek) || {};
+    const bps = d.basePerSqm || 600;
+    let t = state.width * state.length * bps;
+    if (state.woodAccents)  t += d.woodAccents  || 800;
+    t += state.windows * (d.windowUnit || 400);
+    if (state.gutters)      t += d.gutters       || 300;
+    return Math.round(t);
+  }
+
+  function calcPrice_wiata() {
+    const w = (Config.pricing.wiata) || {};
+    const tbl = w.perBin || [0, 1500, 2200, 3000, 3800];
+    let t = tbl[Math.min(state.binCount, 4)] || 0;
+    if (state.closedFront) t += w.closedFront || 500;
+    return Math.round(t);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* BREAKDOWN — DOMEK / WIATA                                           */
+  /* ------------------------------------------------------------------ */
+
+  function renderBreakdown_domek() {
+    const d    = (Config.pricing.domek) || {};
+    const bps  = d.basePerSqm || 600;
+    const area = state.width * state.length;
+    const items = [{ label: `Baza (${area} m²)`, val: area * bps }];
+    if (state.woodAccents) items.push({ label: 'Akcenty drewniane', val: d.woodAccents || 800 });
+    if (state.windows > 0) items.push({ label: `Okna (${state.windows} szt.)`, val: state.windows * (d.windowUnit || 400) });
+    if (state.gutters)     items.push({ label: 'Rynny', val: d.gutters || 300 });
+    _writeBreakdown(items);
+  }
+
+  function renderBreakdown_wiata() {
+    const w   = (Config.pricing.wiata) || {};
+    const tbl = w.perBin || [0, 1500, 2200, 3000, 3800];
+    const items = [{ label: `Wiata (${state.binCount} pojemniki)`, val: tbl[Math.min(state.binCount, 4)] || 0 }];
+    if (state.closedFront) items.push({ label: 'Klapy zamykane', val: w.closedFront || 500 });
+    _writeBreakdown(items);
+  }
+
+  function _writeBreakdown(items) {
+    const el = document.getElementById('gk-price-breakdown');
+    if (el) {
+      el.innerHTML = items.map(it =>
+        `<div class="gk__breakdown-row">
+           <span class="gk__breakdown-label">${it.label}</span>
+           <span class="gk__breakdown-value">${fmt(it.val)}</span>
+         </div>`
+      ).join('');
+    }
+    const totalEl = document.getElementById('gk-total-price');
+    if (totalEl) totalEl.textContent = fmt(calcPrice());
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* PRODUCT TYPE SWITCHER                                                */
+  /* ------------------------------------------------------------------ */
+
+  function applyProductType(type) {
+    state.productType = type;
+    document.querySelectorAll('[data-show-for]').forEach(el => {
+      el.hidden = !el.dataset.showFor.split(' ').includes(type);
+    });
+    document.querySelectorAll('.gk__product-tab').forEach(tab => {
+      tab.classList.toggle('gk__product-tab--active', tab.dataset.product === type);
+    });
+    if (type === 'domek') {
+      if (state.width  > 5)   state.width  = 4;
+      if (state.length > 6)   state.length = 5;
+      if (state.wallHeight > 2.5) state.wallHeight = 2.5;
+    }
+    update();
+  }
+
+  /* ------------------------------------------------------------------ */
   /* MAIN UPDATE                                                          */
   /* ------------------------------------------------------------------ */
 
@@ -545,6 +924,13 @@
       }
     }
   }
+
+  /* Product type tabs */
+  document.querySelectorAll('.gk__product-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      applyProductType(this.dataset.product);
+    });
+  });
 
   document.getElementById('gk-btn-rotate')?.addEventListener('click', function () {
     state.viewAngle = (state.viewAngle + 1) % 4;
